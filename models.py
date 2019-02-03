@@ -6,18 +6,33 @@ class LocalSearch:
         self.num_steps = [[] for _ in range(len(specs))]
         self.f_values = [[] for _ in range(len(specs))]
 
-    def get_xy_0(self, low=None, high=None, size=None):
-        if not (min is None or \
-                max is None or \
-                size is None):
-            xy_0_list = np.random.uniform(
-                low=low, high=high, size=(size, 2)
-                ).tolist()
-        else:
-            raise Exception(
-                'Must input low value, high value, and size of desired list'
-                )
-        return xy_0_list
+    def get_xy_0(self, low, high, size):
+        return np.random.uniform(low=low, high=high, size=(size, 2)).tolist()
+
+    def mean_num_steps(self):
+        """
+        Return mean number of steps for each step size
+        """
+        return [np.mean(num_steps) for num_steps in self.num_steps]
+
+    def mean_f_values(self):
+        """
+        Return mean f value (f being the function to maximize)
+        for each step size
+        """
+        return [np.mean(f_values) for f_values in self.f_values]
+
+    def std_num_steps(self):
+        return [np.std(num_steps) for num_steps in self.num_steps]
+
+    def std_f_values(self):
+        return [np.std(f_values) for f_values in self.f_values]
+
+    def save_num_steps(self, num_steps, i):
+        self.num_steps[i].append(num_steps)
+
+    def save_f_value(self, f_value, i):
+        self.f_values[i].append(f_value)
 
 
 class HillClimbing(LocalSearch):
@@ -32,7 +47,7 @@ class HillClimbing(LocalSearch):
         for i, stepsize in enumerate(self.stepsizes):
             xy_0_list = self.get_xy_0(low=low, high=high, size=100)
 
-            for j, (x0, y0) in enumerate(xy_0_list):
+            for x0, y0 in xy_0_list:
                 f_val, num_steps = self.hillclimb(
                     xy_0=(x0, y0),
                     low_high=(low, high),
@@ -81,24 +96,6 @@ class HillClimbing(LocalSearch):
             (max(x - stepsize, low), min(y + stepsize, high)), # top-left
         )
 
-    def mean_num_steps(self):
-        return [np.mean(num_steps) for num_steps in self.num_steps]
-
-    def mean_f_values(self):
-        return [np.mean(f_values) for f_values in self.f_values]
-
-    def std_num_steps(self):
-        return [np.std(num_steps) for num_steps in self.num_steps]
-
-    def std_f_values(self):
-        return [np.std(f_values) for f_values in self.f_values]
-
-    def save_num_steps(self, num_steps, i):
-        self.num_steps[i].append(num_steps)
-
-    def save_f_value(self, f_value, i):
-        self.f_values[i].append(f_value)
-
 
 class LocalBeamSearch(LocalSearch):
     """
@@ -108,5 +105,7 @@ class LocalBeamSearch(LocalSearch):
         self.beam_widths = beam_widths
         super().__init__(f, beam_widths)
 
-    def start(self, low, high):
-        pass
+    def start(self, low, high, stepsize):
+        for i, beam_width in enumerate(self.beam_widths):
+            for _ in range(100):
+                xy_0_list = self.get_xy_0(low=low, high=high, size=beam_width)
