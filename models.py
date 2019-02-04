@@ -63,39 +63,36 @@ class HillClimbing(LocalSearch):
             xy_0_list = self.get_xy_0(low=low, high=high, size=100)
 
             for x0, y0 in xy_0_list:
-                x, y = x0, y0
-                cur_val = self.f(x, y)
-                num_steps = 1
-
-                while True:
-                    next_val, (xi, yi) = self.hillclimb(
-                        x=x,
-                        y=y,
-                        low_high=(low, high),
-                        stepsize=stepsize)
-
-                    if next_val <= cur_val:
-                        break
-                    else:
-                        x, y = xi, yi
-                        cur_val = next_val
-                        num_steps += 1
+                f_val, num_steps = self.hillclimb(
+                    xy_0=(x0, y0),
+                    low_high=(low, high),
+                    stepsize=stepsize)
 
                 self.save_num_steps(num_steps, i)
-                self.save_f_value(cur_val, i)
+                self.save_f_value(f_val, i)
 
-    def hillclimb(self, x, y, low_high, stepsize):
+    def hillclimb(self, xy_0, low_high, stepsize):
         low, high = low_high
+        x, y = xy_0
+        cur_val = self.f(x, y)
+        num_steps = 1
 
-        neighbours = self.get_neighbours(
-            xy=(x, y),
-            low_high=(low, high),
-            stepsize=stepsize)
+        while True:
+            neighbours = self.get_neighbours(
+                xy=(x, y),
+                low_high=(low, high),
+                stepsize=stepsize)
+            vals = [self.f(x, y) for x, y in neighbours]
+            next_val = max(vals)
+            xi, yi = neighbours[vals.index(next_val)]
+            if next_val <= cur_val:
+                break
+            else:
+                x, y = xi, yi
+                cur_val = next_val
+                num_steps += 1
 
-        vals = [self.f(x, y) for x, y in neighbours]
-        next_val = max(vals)
-        xi, yi = neighbours[vals.index(next_val)]
-        return next_val, (xi, yi)
+        return cur_val, num_steps
 
 
 class LocalBeamSearch(LocalSearch):
